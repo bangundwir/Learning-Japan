@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 interface FlashcardDeckProps {
   cards: { kana: string; roumaji: string; type: string }[]
-  // Hapus deck dan setDeck jika tidak digunakan
   darkMode: boolean
   updateProgress: (progress: number) => void
 }
