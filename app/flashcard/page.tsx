@@ -11,14 +11,13 @@ import WritingPractice from '../../components/WritingPractice'
 import MemoryGame from '../../components/MemoryGame'
 import StatsModal from '../../components/StatsModal'
 import AILearningMode from '../../components/AILearningMode'
-import Login from '../../components/Login'
 import { FaSignOutAlt } from 'react-icons/fa'
 
 export default function FlashcardPage() {
   const [deck, setDeck] = useState('hiragana')
   const [cards, setCards] = useState(hiraganaData)
   const [mode, setMode] = useState('flashcard')
-  const [testScore, setTestScore] = useState<number | null>(null)
+  const [_, setTestScore] = useState(0) // Ganti testScore menjadi _ jika tidak digunakan
   const [darkMode, setDarkMode] = useState(false)
   const [progress, setProgress] = useState(0)
   const [dailyProgress, setDailyProgress] = useState<number[]>(Array(28).fill(0))

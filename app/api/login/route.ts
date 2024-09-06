@@ -5,9 +5,12 @@ import crypto from 'crypto';
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
 const LOGIN_PASSWORD = process.env.LOGIN_PASSWORD || 'password123';
 
-function hashPassword(password: string): string {
-  return crypto.createHash('sha256').update(password).digest('hex');
-}
+// import { hashPassword } from '../../../utils/auth'
+
+// Menjadi ini (jika memang tidak digunakan):
+// import { _ as hashPassword } from '../../../utils/auth'
+
+// Atau hapus saja jika benar-benar tidak diperlukan
 
 export async function POST(request: Request) {
   const { password } = await request.json();

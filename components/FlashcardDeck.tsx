@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 interface FlashcardDeckProps {
   cards: { kana: string; roumaji: string; type: string }[]
-  deck: string
-  setDeck: (deck: string) => void
+  // Hapus deck dan setDeck jika tidak digunakan
   darkMode: boolean
   updateProgress: (progress: number) => void
 }
@@ -18,7 +17,7 @@ interface SRSCard {
   nextReview: number
 }
 
-export default function FlashcardDeck({ cards, deck, setDeck, darkMode, updateProgress }: FlashcardDeckProps) {
+export default function FlashcardDeck({ cards, darkMode, updateProgress }: FlashcardDeckProps) {
   const [srsCards, setSRSCards] = useState<SRSCard[]>([])
   const [currentCard, setCurrentCard] = useState<SRSCard | null>(null)
   const [showAnswer, setShowAnswer] = useState(false)

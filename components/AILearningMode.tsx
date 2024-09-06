@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import OpenAI from 'openai'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
-import { FaPaperPlane, FaLightbulb, FaPlus, FaTrash, FaExpand, FaCompress, FaHistory, FaSignOutAlt, FaDownload, FaUpload } from 'react-icons/fa'
+import { FaPaperPlane, FaPlus, FaTrash, FaExpand, FaCompress, FaHistory, FaSignOutAlt, FaDownload, FaUpload } from 'react-icons/fa'
 import Login from './Login'
 import { saveAs } from 'file-saver'
 
@@ -90,11 +90,27 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
     }
   };
 
+  const sendInitialMessage = useCallback(async (chatId: string) => {
+    const initialMessage = { role: 'assistant' as const, content: `Halo! Saya adalah asisten AI untuk belajar bahasa Jepang. Topik kita kali ini adalah "${topic}". Apa yang ingin Anda pelajari tentang ${topic}?` }
+    setChats(prev => prev.map(chat => 
+      chat.id === chatId 
+        ? { ...chat, messages: [initialMessage] }
+        : chat
+    ))
+  }, [topic])
+
+  const createNewChat = useCallback(() => {
+    const newChatId = Date.now().toString()
+    setChats(prev => [...prev, { id: newChatId, topic, messages: [] }])
+    setCurrentChatId(newChatId)
+    sendInitialMessage(newChatId)
+  }, [topic, sendInitialMessage])
+
   useEffect(() => {
     if (isLoggedIn && chats.length === 0) {
       createNewChat()
     }
-  }, [isLoggedIn, chats.length])
+  }, [isLoggedIn, chats.length, createNewChat])
 
   useEffect(() => {
     scrollToBottom()
@@ -107,29 +123,6 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
   }
 
   const getCurrentChat = () => chats.find(chat => chat.id === currentChatId) || null
-
-  const createNewChat = () => {
-    const newChatId = Date.now().toString()
-    setChats(prev => [...prev, { id: newChatId, topic, messages: [] }])
-    setCurrentChatId(newChatId)
-    sendInitialMessage(newChatId)
-  }
-
-  const deleteChat = (chatId: string) => {
-    setChats(prev => prev.filter(chat => chat.id !== chatId))
-    if (currentChatId === chatId) {
-      setCurrentChatId(chats[chats.length - 2]?.id || null)
-    }
-  }
-
-  const sendInitialMessage = async (chatId: string) => {
-    const initialMessage = { role: 'assistant' as const, content: `Halo! Saya adalah asisten AI untuk belajar bahasa Jepang. Topik kita kali ini adalah "${topic}". Apa yang ingin Anda pelajari tentang ${topic}?` }
-    setChats(prev => prev.map(chat => 
-      chat.id === chatId 
-        ? { ...chat, messages: [initialMessage] }
-        : chat
-    ))
-  }
 
   const generateSuggestedQuestions = async () => {
     setIsGeneratingSuggestions(true);
@@ -254,11 +247,18 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
     loadChatsFromLocalStorage()
   }, [])
 
+  const saveChatsToLocalStorage = useCallback(() => {
+    localStorage.setItem('aiTutorChats', JSON.stringify(chats))
+    if (currentChatId) {
+      localStorage.setItem('aiTutorCurrentChatId', currentChatId)
+    }
+  }, [chats, currentChatId])
+
   useEffect(() => {
     if (chats.length > 0) {
       saveChatsToLocalStorage()
     }
-  }, [chats])
+  }, [chats, saveChatsToLocalStorage])
 
   const loadChatsFromLocalStorage = () => {
     const savedChats = localStorage.getItem('aiTutorChats')
@@ -268,13 +268,6 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
     }
     if (savedCurrentChatId) {
       setCurrentChatId(savedCurrentChatId)
-    }
-  }
-
-  const saveChatsToLocalStorage = () => {
-    localStorage.setItem('aiTutorChats', JSON.stringify(chats))
-    if (currentChatId) {
-      localStorage.setItem('aiTutorCurrentChatId', currentChatId)
     }
   }
 
@@ -301,6 +294,13 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
       reader.readAsText(file)
     }
   }
+
+  const deleteChat = useCallback((chatId: string) => {
+    setChats(prev => prev.filter(chat => chat.id !== chatId))
+    if (currentChatId === chatId) {
+      setCurrentChatId(chats[chats.length - 2]?.id || null)
+    }
+  }, [chats, currentChatId])
 
   if (!isLoggedIn) {
     return <Login onLogin={handleLogin} darkMode={darkMode} />
@@ -336,38 +336,51 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
               transition={{ duration: 0.3 }}
               className={`h-full overflow-y-auto ${darkMode ? 'bg-gray-800' : 'bg-white'} border-r ${darkMode ? 'border-gray-700' : 'border-gray-200'} absolute md:relative z-10 md:z-auto shadow-lg md:shadow-none`}
             >
-              <div className="p-4">
+              <div className="p-2 sm:p-4">
                 <h3 className="text-lg font-semibold mb-4 text-center">Riwayat Chat</h3>
                 <div className="space-y-2">
                   {chats.map(chat => (
-                    <div 
+                    <motion.div 
                       key={chat.id} 
-                      className={`flex flex-col p-3 rounded-lg hover:bg-opacity-50 transition-colors ${
+                      className={`flex flex-col p-3 rounded-lg transition-colors cursor-pointer ${
                         currentChatId === chat.id 
                           ? (darkMode ? 'bg-gray-700' : 'bg-gray-200') 
-                          : (darkMode ? 'bg-gray-750' : 'bg-gray-50')
+                          : (darkMode ? 'bg-gray-750 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100')
                       } border ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setCurrentChatId(chat.id);
+                        if (window.innerWidth < 768) toggleChatHistory();
+                      }}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-sm truncate flex-grow mr-2">
                           {chat.topic}
                         </h4>
-                        <button 
-                          onClick={() => deleteChat(chat.id)} 
-                          className="text-red-500 hover:text-red-600 transition-colors p-1"
-                        >
-                          <FaTrash className="w-3 h-3" />
-                        </button>
+                        <div className="flex space-x-1">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent triggering the parent onClick
+                              deleteChat(chat.id);
+                            }} 
+                            className="text-red-500 hover:text-red-600 transition-colors p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900"
+                          >
+                            <FaTrash className="w-3 h-3 sm:w-4 sm:h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => {setCurrentChatId(chat.id); if (window.innerWidth < 768) toggleChatHistory();}}
-                        className={`text-left text-xs ${currentChatId === chat.id ? 'font-bold' : ''} hover:underline line-clamp-2`}
-                      >
-                        {chat.messages[chat.messages.length - 1]?.content || "Belum ada pesan"}
-                      </button>
-                    </div>
+                      <p className={`text-left text-xs ${currentChatId === chat.id ? 'font-bold' : ''} line-clamp-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        {chat.messages[chat.messages.length - 1]?.content.substring(0, 50) || "Belum ada pesan"}...
+                      </p>
+                    </motion.div>
                   ))}
                 </div>
+                {chats.length === 0 && (
+                  <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
+                    Belum ada riwayat chat. Mulai chat baru untuk memulai!
+                  </p>
+                )}
               </div>
             </motion.div>
           )}
