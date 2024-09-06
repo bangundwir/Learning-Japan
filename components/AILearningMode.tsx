@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import OpenAI from 'openai'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
-import { FaPaperPlane, FaLightbulb, FaPlus, FaTrash, FaExpand, FaCompress } from 'react-icons/fa'
+import { FaPaperPlane, FaLightbulb, FaPlus, FaTrash, FaExpand, FaCompress, FaHistory } from 'react-icons/fa'
 
 interface AILearningModeProps {
   darkMode: boolean
@@ -31,6 +31,7 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [showChatHistory, setShowChatHistory] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -179,13 +180,22 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
     setIsFullscreen(!isFullscreen)
   }
 
+  const toggleChatHistory = () => {
+    setShowChatHistory(!showChatHistory)
+  }
+
   return (
     <div className={`w-full mx-auto flex flex-col ${isFullscreen ? 'fixed inset-0 z-50 bg-white dark:bg-gray-900' : 'h-[calc(100vh-200px)]'} px-4 sm:px-6 lg:px-8`}>
       <div className="flex justify-between items-center mb-4">
         <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Asisten Belajar AI Bahasa Jepang</h2>
-        <button onClick={toggleFullscreen} className={`p-2 rounded-full ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}>
-          {isFullscreen ? <FaCompress /> : <FaExpand />}
-        </button>
+        <div className="flex space-x-2">
+          <button onClick={toggleChatHistory} className={`p-2 rounded-full ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}>
+            <FaHistory />
+          </button>
+          <button onClick={toggleFullscreen} className={`p-2 rounded-full ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-200 text-gray-800'}`}>
+            {isFullscreen ? <FaCompress /> : <FaExpand />}
+          </button>
+        </div>
       </div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <label className={`${darkMode ? 'text-white' : 'text-gray-800'}`}>Topik:</label>
@@ -212,23 +222,32 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
         </motion.button>
       </div>
       <div className="flex-grow flex flex-col md:flex-row gap-4 overflow-hidden">
-        <div className="w-full md:w-1/4 overflow-y-auto pr-4 max-h-[60vh] md:max-h-full">
-          <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Riwayat Chat</h3>
-          {chats.map(chat => (
-            <div key={chat.id} className="flex items-center justify-between mb-2">
-              <button
-                onClick={() => setCurrentChatId(chat.id)}
-                className={`text-left truncate ${currentChatId === chat.id ? 'font-bold' : ''} ${darkMode ? 'text-white' : 'text-gray-800'}`}
-              >
-                {chat.topic}
-              </button>
-              <button onClick={() => deleteChat(chat.id)} className="text-red-500">
-                <FaTrash />
-              </button>
-            </div>
-          ))}
-        </div>
-        <div className="w-full md:w-3/4 flex flex-col overflow-hidden">
+        <AnimatePresence>
+          {showChatHistory && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: "25%", opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              className="w-full md:w-1/4 overflow-y-auto pr-4 max-h-[60vh] md:max-h-full"
+            >
+              <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Riwayat Chat</h3>
+              {chats.map(chat => (
+                <div key={chat.id} className="flex items-center justify-between mb-2">
+                  <button
+                    onClick={() => setCurrentChatId(chat.id)}
+                    className={`text-left truncate ${currentChatId === chat.id ? 'font-bold' : ''} ${darkMode ? 'text-white' : 'text-gray-800'}`}
+                  >
+                    {chat.topic}
+                  </button>
+                  <button onClick={() => deleteChat(chat.id)} className="text-red-500">
+                    <FaTrash />
+                  </button>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <div className={`w-full ${showChatHistory ? 'md:w-3/4' : 'md:w-full'} flex flex-col overflow-hidden`}>
           <div 
             ref={chatContainerRef} 
             className={`flex-grow overflow-y-auto mb-4 p-4 rounded-lg border-2 space-y-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-300'}`}
