@@ -17,7 +17,8 @@ export default function FlashcardPage() {
   const [deck, setDeck] = useState('hiragana')
   const [cards, setCards] = useState(hiraganaData)
   const [mode, setMode] = useState('flashcard')
-  const [_, setTestScore] = useState(0) // Ganti testScore menjadi _ jika tidak digunakan
+  // Remove the unused state variable
+  // const [_, setTestScore] = useState(0)
   const [darkMode, setDarkMode] = useState(false)
   const [progress, setProgress] = useState(0)
   const [dailyProgress, setDailyProgress] = useState<number[]>(Array(28).fill(0))
@@ -58,7 +59,8 @@ export default function FlashcardPage() {
   }, [])
 
   const handleTestFinish = (score: number) => {
-    setTestScore(score)
+    // Update this to use the score directly instead of setting an unused state
+    console.log(`Test finished with score: ${score}`);
     setMode('flashcard')
   }
 
@@ -186,7 +188,13 @@ export default function FlashcardPage() {
       <main className="flex-grow flex flex-col items-center justify-center">
         <div className="w-full max-w-4xl">
           {mode === 'grid' && <CharacterGrid characters={cards} darkMode={darkMode} />}
-          {mode === 'flashcard' && <FlashcardDeck cards={cards} deck={deck} setDeck={setDeck} darkMode={darkMode} updateProgress={updateProgress} />}
+          {mode === 'flashcard' && (
+            <FlashcardDeck
+              cards={cards}
+              darkMode={darkMode}
+              updateProgress={updateProgress}
+            />
+          )}
           {mode === 'test' && <TestMode cards={cards} onFinish={handleTestFinish} darkMode={darkMode} updateProgress={updateProgress} />}
           {mode === 'writing' && <WritingPractice cards={cards} darkMode={darkMode} updateProgress={updateProgress} />}
           {mode === 'memory' && <MemoryGame cards={cards} darkMode={darkMode} updateProgress={updateProgress} />}

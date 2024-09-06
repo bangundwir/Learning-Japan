@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { SignJWT } from 'jose';
-import crypto from 'crypto';
+
+// Remove the unused import of crypto
+// import crypto from 'crypto';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
 const LOGIN_PASSWORD = process.env.LOGIN_PASSWORD || 'password123';
