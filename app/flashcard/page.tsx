@@ -11,6 +11,8 @@ import WritingPractice from '../../components/WritingPractice'
 import MemoryGame from '../../components/MemoryGame'
 import StatsModal from '../../components/StatsModal'
 import AILearningMode from '../../components/AILearningMode'
+import Login from '../../components/Login'
+import { FaSignOutAlt } from 'react-icons/fa'
 
 export default function FlashcardPage() {
   const [deck, setDeck] = useState('hiragana')
@@ -21,10 +23,40 @@ export default function FlashcardPage() {
   const [progress, setProgress] = useState(0)
   const [dailyProgress, setDailyProgress] = useState<number[]>(Array(28).fill(0))
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
     setCards(deck === 'hiragana' ? hiraganaData : katakanaData)
   }, [deck])
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('aiTutorToken');
+      const rememberLogin = localStorage.getItem('rememberLogin');
+      if (token && rememberLogin === 'true') {
+        try {
+          const response = await fetch('/api/verify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (response.ok) {
+            setIsLoggedIn(true);
+          } else {
+            localStorage.removeItem('aiTutorToken');
+            localStorage.removeItem('rememberLogin');
+          }
+        } catch (error) {
+          console.error('Error verifying token:', error);
+          localStorage.removeItem('aiTutorToken');
+          localStorage.removeItem('rememberLogin');
+        }
+      }
+    };
+    checkAuth();
+  }, [])
 
   const handleTestFinish = (score: number) => {
     setTestScore(score)
@@ -45,10 +77,46 @@ export default function FlashcardPage() {
     })
   }
 
+  useEffect(() => {
+    const token = localStorage.getItem('aiTutorToken');
+    const rememberMe = localStorage.getItem('aiTutorRememberMe') === 'true';
+    if (token && rememberMe) {
+      verifyToken(token);
+    }
+  }, []);
+
+  const verifyToken = async (token: string) => {
+    try {
+      const response = await fetch('/api/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        setIsLoggedIn(true);
+      } else {
+        localStorage.removeItem('aiTutorToken');
+        localStorage.removeItem('aiTutorRememberMe');
+      }
+    } catch (error) {
+      console.error('Error verifying token:', error);
+      localStorage.removeItem('aiTutorToken');
+      localStorage.removeItem('aiTutorRememberMe');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('aiTutorToken');
+    localStorage.removeItem('aiTutorRememberMe');
+    setIsLoggedIn(false);
+  };
+
   return (
     <div className={`flex flex-col min-h-screen p-4 ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-800'} transition-all duration-300`}>
       <header className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
           {mode === 'test' ? 'Test Mode' : `${deck === 'hiragana' ? 'Hiragana' : 'Katakana'} Flashcards`}
         </h1>
         <div className="flex space-x-2">
@@ -68,6 +136,16 @@ export default function FlashcardPage() {
           >
             {darkMode ? '🌞' : '🌙'}
           </motion.button>
+          {isLoggedIn && (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleLogout}
+              className="p-2 rounded-full bg-red-500 text-white shadow-md"
+            >
+              <FaSignOutAlt className="w-4 h-4 sm:w-5 sm:h-5" />
+            </motion.button>
+          )}
         </div>
       </header>
 
@@ -113,7 +191,12 @@ export default function FlashcardPage() {
           {mode === 'test' && <TestMode cards={cards} onFinish={handleTestFinish} darkMode={darkMode} updateProgress={updateProgress} />}
           {mode === 'writing' && <WritingPractice cards={cards} darkMode={darkMode} updateProgress={updateProgress} />}
           {mode === 'memory' && <MemoryGame cards={cards} darkMode={darkMode} updateProgress={updateProgress} />}
-          {mode === 'ai' && <AILearningMode darkMode={darkMode} updateProgress={updateProgress} />}
+          {mode === 'ai' && (
+            <AILearningMode
+              darkMode={darkMode}
+              updateProgress={updateProgress}
+            />
+          )}
         </div>
       </main>
 

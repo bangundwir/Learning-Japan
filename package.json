@@ -9,7 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/file-saver": "^2.0.7",
+    "file-saver": "^2.0.5",
     "framer-motion": "^11.5.4",
+    "jose": "^5.8.0",
+    "jsonwebtoken": "^9.0.0",
     "next": "14.2.8",
     "openai": "^4.58.0",
     "react": "^18",
@@ -20,6 +24,7 @@
     "tailwind-scrollbar": "^3.1.0"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
