@@ -204,7 +204,6 @@ export default function FlashcardPage() {
           )}
           {mode === 'aitest' && (
             <AIJapaneseTest
-              darkMode={darkMode}
               updateProgress={updateProgress}
             />
           )}
