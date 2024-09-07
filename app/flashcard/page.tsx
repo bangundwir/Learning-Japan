@@ -11,14 +11,13 @@ import WritingPractice from '../../components/WritingPractice'
 import MemoryGame from '../../components/MemoryGame'
 import StatsModal from '../../components/StatsModal'
 import AILearningMode from '../../components/AILearningMode'
+import AIJapaneseTest from '../../components/AIJapaneseTest'
 import { FaSignOutAlt } from 'react-icons/fa'
 
 export default function FlashcardPage() {
   const [deck, setDeck] = useState('hiragana')
   const [cards, setCards] = useState(hiraganaData)
   const [mode, setMode] = useState('flashcard')
-  // Remove the unused state variable
-  // const [_, setTestScore] = useState(0)
   const [darkMode, setDarkMode] = useState(false)
   const [progress, setProgress] = useState(0)
   const [dailyProgress, setDailyProgress] = useState<number[]>(Array(28).fill(0))
@@ -59,7 +58,6 @@ export default function FlashcardPage() {
   }, [])
 
   const handleTestFinish = (score: number) => {
-    // Update this to use the score directly instead of setting an unused state
     console.log(`Test finished with score: ${score}`);
     setMode('flashcard')
   }
@@ -152,7 +150,7 @@ export default function FlashcardPage() {
 
       <nav className="mb-8">
         <div className="flex flex-wrap justify-center gap-2 mb-4">
-          {['grid', 'flashcard', 'test', 'writing', 'memory', 'ai'].map((m) => (
+          {['grid', 'flashcard', 'test', 'writing', 'memory', 'ai', 'aitest'].map((m) => (
             <motion.button
               key={m}
               whileHover={{ scale: 1.05 }}
@@ -163,7 +161,7 @@ export default function FlashcardPage() {
                   ? 'bg-green-600 text-white dark:bg-green-500'
                   : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
             >
-              {m === 'ai' ? 'AI Tutor' : m.charAt(0).toUpperCase() + m.slice(1)}
+              {m === 'ai' ? 'AI Tutor' : m === 'aitest' ? 'AI Test' : m.charAt(0).toUpperCase() + m.slice(1)}
             </motion.button>
           ))}
         </div>
@@ -200,6 +198,12 @@ export default function FlashcardPage() {
           {mode === 'memory' && <MemoryGame cards={cards} darkMode={darkMode} updateProgress={updateProgress} />}
           {mode === 'ai' && (
             <AILearningMode
+              darkMode={darkMode}
+              updateProgress={updateProgress}
+            />
+          )}
+          {mode === 'aitest' && (
+            <AIJapaneseTest
               darkMode={darkMode}
               updateProgress={updateProgress}
             />
