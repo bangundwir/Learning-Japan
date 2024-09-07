@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import OpenAI from 'openai'
 import ReactMarkdown from 'react-markdown'
 import rehypeHighlight from 'rehype-highlight'
-import { FaPaperPlane, FaPlus, FaTrash, FaExpand, FaCompress, FaHistory, FaSignOutAlt, FaDownload, FaUpload } from 'react-icons/fa'
+import { FaPaperPlane, FaPlus, FaTrash, FaExpand, FaCompress, FaHistory, FaSignOutAlt, FaDownload, FaUpload} from 'react-icons/fa'
 import Login from './Login'
 import { saveAs } from 'file-saver'
 
@@ -23,6 +23,11 @@ interface Chat {
   messages: Message[]
 }
 
+interface ModelOption {
+  id: string;
+  name: string;
+}
+
 export default function AILearningMode({ darkMode, updateProgress }: AILearningModeProps) {
   const [userInput, setUserInput] = useState('')
   const [chats, setChats] = useState<Chat[]>([])
@@ -37,6 +42,14 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false)
+  const [selectedModel, setSelectedModel] = useState<string>("google/gemini-flash-1.5")
+
+  const modelOptions: ModelOption[] = [
+    { id: "google/gemini-flash-1.5", name: "Gemini Flash 1.5" },
+    { id: "microsoft/phi-3.5-mini-128k-instruct", name: "Phi 3.5 Mini" },
+    { id: "mattshumer/reflection-70b", name: "Reflection 70B" },
+    { id: "openai/gpt-4o-mini", name: "GPT-4O Mini" },
+  ]
 
   useEffect(() => {
     const token = localStorage.getItem('aiTutorToken');
@@ -194,7 +207,7 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
 
       const currentChat = getCurrentChat()
       const stream = await openai.chat.completions.create({
-        model: "google/gemini-flash-1.5",
+        model: selectedModel,
         messages: [
           { role: "system", content: "Anda adalah tutor bahasa Jepang yang membantu, khusus mengajar Hiragana, Katakana, Kanji, tata bahasa (bunpo), dan aspek lain dari bahasa Jepang. Berikan penjelasan dalam bahasa Indonesia. Gunakan format Markdown untuk menyusun respons Anda." },
           ...(currentChat?.messages || []),
@@ -388,7 +401,7 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
 
         {/* Chat area */}
         <div className="flex-grow flex flex-col overflow-hidden">
-          {/* Topic selector and action buttons */}
+          {/* Topic selector, model selector, and action buttons */}
           <div className={`flex flex-wrap items-center gap-2 p-2 sm:p-4 ${darkMode ? 'bg-gray-800' : 'bg-white'} border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
             <select
               value={topic}
@@ -436,6 +449,17 @@ export default function AILearningMode({ darkMode, updateProgress }: AILearningM
               <option value="pelafalan">Pelafalan dan Aksen</option>
               <option value="idiom">Idiom dan Peribahasa</option>
               <option value="keigo">Keigo (Bahasa Sopan)</option>
+            </select>
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              className={`p-1 sm:p-2 rounded-lg border transition-colors text-xs sm:text-sm ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-800'} focus:outline-none focus:border-blue-500 flex-grow sm:flex-grow-0`}
+            >
+              {modelOptions.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
             </select>
             <div className="flex flex-wrap gap-1 sm:gap-2">
               <motion.button
